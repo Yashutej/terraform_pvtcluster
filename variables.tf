@@ -5,6 +5,11 @@ variable "cluster_name" {
   description = "EKS Cluster Name"
   type        = string
 }
+variable "availability_zones" {
+  description = "Optional list of AZs to use."
+  type        = list(string)
+  default     = []
+}
 
 variable "aws_region" {
   description = "AWS region to deploy resources"
