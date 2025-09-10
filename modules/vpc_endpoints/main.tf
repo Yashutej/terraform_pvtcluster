@@ -35,7 +35,9 @@ resource "aws_security_group" "endpoints_sg" {
 
 # --- Interface endpoints (ECR, DKR, STS, Logs, etc.) ---
 resource "aws_vpc_endpoint" "interface_endpoints" {
-  for_each = var.create_interface_endpoints ? toset(var.interface_endpoints) : {}
+    for_each = var.create_interface_endpoints ? toset(var.interface_endpoints) : toset([])
+
+  
 
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.${var.aws_region}.${each.key}"

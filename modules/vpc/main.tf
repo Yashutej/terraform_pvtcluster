@@ -1,20 +1,14 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
 
 locals {
-  azs = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, var.max_azs)
+  azs = length(var.availability_zones) > 0 ? var.availability_zones : ["ap-south-1a", "ap-south-1b"]
 }
 
 # VPC
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = merge(
-    { Name = "${var.cluster_name}-vpc" },
-    var.tags
-  )
+  enable_dns_hostnames = true
+  tags = { Name = "${var.cluster_name}-vpc" }
 }
 
 # Internet Gateway
@@ -25,38 +19,25 @@ resource "aws_internet_gateway" "igw" {
 
 # Public Subnets
 resource "aws_subnet" "public" {
-  for_each                = { for idx, cidr in var.public_subnets_cidrs : idx => cidr }
+  for_each                = var.public_subnets_cidrs
   vpc_id                  = aws_vpc.this.id
   cidr_block              = each.value
   availability_zone       = local.azs[tonumber(each.key)]
   map_public_ip_on_launch = true
-  tags                    = { Name = "${var.cluster_name}-public-${each.key}" }
-}
-
-# Elastic IP for NAT
-resource "aws_eip" "nat" {
-  tags = { Name = "${var.cluster_name}-nat-eip" }
-}
-
-# NAT Gateway (first public subnet)
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = element(values(aws_subnet.public), 0).id
-  tags          = { Name = "${var.cluster_name}-natgw" }
-  depends_on    = [aws_internet_gateway.igw]
+  tags = { Name = "${var.cluster_name}-public-${each.key}" }
 }
 
 # Private Subnets
 resource "aws_subnet" "private" {
-  for_each                = { for idx, cidr in var.private_subnets_cidrs : idx => cidr }
+  for_each                = var.private_subnets_cidrs
   vpc_id                  = aws_vpc.this.id
   cidr_block              = each.value
   availability_zone       = local.azs[tonumber(each.key)]
   map_public_ip_on_launch = false
-  tags                    = { Name = "${var.cluster_name}-private-${each.key}" }
+  tags = { Name = "${var.cluster_name}-private-${each.key}" }
 }
 
-# Route table for public subnets
+# Public Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
   route {
@@ -72,7 +53,18 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public.id
 }
 
-# Route table for private subnets
+# NAT Gateway & Private Route Table
+resource "aws_eip" "nat" {
+  tags = { Name = "${var.cluster_name}-nat-eip" }
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = element(values(aws_subnet.public), 0).id
+  tags          = { Name = "${var.cluster_name}-natgw" }
+  depends_on    = [aws_internet_gateway.igw]
+}
+
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
   route {

@@ -9,9 +9,9 @@ vpc_cidr     = "10.0.0.0/16"
 # Availability Zones
 #######################################
 # Leave empty to auto-pick AZs from AWS
-availability_zones = []
-max_azs            = 2
 
+availability_zones = ["us-west-1a", "ap-west-1b"]
+max_azs = 2
 #######################################
 # VPC Subnets
 #######################################

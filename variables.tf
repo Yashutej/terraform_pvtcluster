@@ -12,6 +12,11 @@ variable "cluster_name" {
   type        = string
   default     = "private-eks"
 }
+variable "cluster_version" {
+  description = "EKS cluster version"
+  type        = string
+  default     = "1.27"
+}
 
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
