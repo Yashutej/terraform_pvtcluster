@@ -1,4 +1,4 @@
-# Create EKS cluster (private endpoint only)
+
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   version  = var.cluster_version
@@ -19,7 +19,7 @@ resource "aws_eks_cluster" "this" {
   ]
 }
 
-# Generate kubeconfig file
+
 resource "local_file" "kubeconfig" {
   content = templatefile("${path.module}/kubeconfig.tpl", {
     cluster_name     = aws_eks_cluster.this.name
@@ -31,7 +31,7 @@ resource "local_file" "kubeconfig" {
   depends_on = [aws_eks_cluster.this]
 }
 
-# Create managed node group
+
 resource "aws_eks_node_group" "managed_nodes" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.cluster_name}-ng"

@@ -14,7 +14,7 @@ create_s3_endpoint         = true
 create_interface_endpoints = true
 interface_endpoints        = ["ecr.api", "ecr.dkr", "sts", "logs"]
 
-# EKS Node Group Config
+#EKS Node Group Config
 desired_capacity = 2
 max_capacity     = 3
 min_capacity     = 1
